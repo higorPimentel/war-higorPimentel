@@ -14,6 +14,18 @@
 //
 // ============================================================================
 
+
+#include <stdio.h>
+#include <string.h>
+
+
+typedef struct {
+    char nome[30];
+    char cor[10];
+    int tropas;
+} Territorio;
+
+
 // Inclusão das bibliotecas padrão necessárias para entrada/saída, alocação de memória, manipulação de strings e tempo.
 
 // --- Constantes Globais ---
@@ -51,7 +63,47 @@ int main() {
     // 3. Limpeza:
     // - Ao final do jogo, libera a memória alocada para o mapa para evitar vazamentos de memória.
 
+ Territorio territorios[6]; // Vetor para armazenar 5 territórios
+    int i;
+
+    printf("===== Cadastro de Territórios =====\n\n Pressione Enter para começar \n\n");
+
+    // Entrada de dados dos territórios
+    for (i = 1; i < 6; i++) {
+        
+        // Limpeza do buffer de entrada antes de ler strings
+        getchar();
+        
+        printf("Digite o nome do território: %d: ", i );
+        // printf("Digite o nome do território: ");
+        fgets(territorios[i].nome, sizeof(territorios[i].nome), stdin);
+        territorios[i].nome[strcspn(territorios[i].nome, "\n")] = '\0'; // Remove o '\n'
+
+        printf("Digite a cor do exército: ");
+        fgets(territorios[i].cor, sizeof(territorios[i].cor), stdin);
+        territorios[i].cor[strcspn(territorios[i].cor, "\n")] = '\0'; // Remove o '\n'
+
+        printf("Digite a quantidade de tropas: ");
+        scanf("%d", &territorios[i].tropas);
+
+        printf("\n");
+    }
+
+    // Exibição dos dados cadastrados
+    printf("===== Territórios Cadastrados =====\n\n");
+
+    for (i = 1; i < 6; i++) {
+        printf("Território %d:\n", i );
+        printf("Nome: %s\n", territorios[i].nome);
+        printf("Cor do Exército: %s\n", territorios[i].cor);
+        printf("Quantidade de Tropas: %d\n", territorios[i].tropas);
+        printf("-----------------------------------\n");
+    }
+
+    printf("Fim do programa.\n");
+
     return 0;
+
 }
 
 // --- Implementação das Funções ---
