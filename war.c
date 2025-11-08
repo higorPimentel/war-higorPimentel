@@ -22,7 +22,7 @@
 #include <time.h>
 
 typedef struct {
-    char nome[30];
+    char nome[100];
     char cor[10];
     int tropas;
 } Territorio;
@@ -32,16 +32,21 @@ typedef struct {
 Territorio *territorios = NULL; // ponteiro dinâmico
 int qtdTerritorios = 0;         // quantidade criada
 int i;
-int id_Territorio_missao;
+int id_territorio_missao;   // armazena o id do territorio atacante, responsavel pela missão
 char nome_missao[50];
+int statusMissao = 0; //define um status da missão - 0 missão ainda pendente / 1 missão realizada
 
 
 void liberarMemoria() {
     // Libera a memória previamente alocada para o mapa usando free.
     // Finaliza programa
-    free(territorios);
+    
+    // if (territorios != NULL) {
+    //     free(territorios);
+    //     territorios = NULL;
+    // }
     printf("Encerrando o programa...\n");
-    exit(0); // encerra o programa
+    exit(0);
 }
 
 
@@ -59,12 +64,13 @@ void alocarMapa() {
         if (scanf("%d", &qtdTerritorios) != 1) {
             // Entrada inválida (ex: texto)
             printf("Entrada inválida! Tente novamente.\n");
-            while (getchar() != '\n'); // limpa o buffer
+            limparBufferEntrada();
             continue;
         }
 
         if (qtdTerritorios == 0) {
            liberarMemoria();       
+
         }
 
         if (qtdTerritorios < 2) {
@@ -79,7 +85,7 @@ void alocarMapa() {
         exit(1);
     }
 
-    printf("%d territórios alocados com sucesso!\n\n", qtdTerritorios);
+    printf("\n %d territórios alocados com sucesso!\n\n", qtdTerritorios);
 }
 
 void inicializarTerritorios(){
@@ -120,51 +126,172 @@ void exibirMapa() {
     printf("===========================================================\n\n");	
 }
 
+
 void sortearMissao(){
     int min,max,aleatorio;
 
     min = 1;
     max = qtdTerritorios;
 
+    // sorteia um território para a missão
     aleatorio = min + rand() % (max - min + 1);
+    id_territorio_missao = aleatorio;
 
     strcpy(nome_missao, "Missão Atual -  "); 
     strcat(nome_missao, territorios[aleatorio].nome);
-    strcat(nome_missao, " deverá conquistar um território"); 
+    strcat(nome_missao, " deverá conquistar um território inimigo"); 
 
 
     //return aleatorio;
 }
 
-void exibeMissaoAtual() {
+void exibeMissaoAtual(int vlr) {
+
+     if(vlr == 2) {
+         printf("\n\n");	
+      }
+
     printf("====================== MISSÃO ATUAL ======================\n");
     printf("%s\n", nome_missao);
     printf("==========================================================\n\n");	
+
+     if(vlr == 2) {
+         printf("Jogo Finalizado...\n");
+         exit(0);
+      }
+    
 }
 
 
+
+void simularAtaque(int IdAtacante,int IdDefensor){
+    int min,max,dado;
+    int idVencedor,idPerdedor;
+    int qtd_dado_atcante, qtd_dado_defensor;
+    char mensagem_ataque[50];
+    char tropa_vencedora[30];
+    
+    //   printf("id atacante -  %d: ", IdAtacante);
+    //   printf("id defensor -  %d: ", IdDefensor);    
+
+    //  Lógica de decisão. Sorteia dois número de 1 a 6  e atribui aos dois competidores. Maior vence
+    min = 1;
+    max = 6;
+
+    
+    // gera o dado pros dois competidores
+    dado = min + rand() % (max - min + 1);
+    qtd_dado_atcante = dado;
+    dado = min + rand() % (max - min + 1);
+    qtd_dado_defensor = dado;
+
+
+    //  verifica quem foi o vencedor (Atacante ou defensor)
+
+    if(qtd_dado_atcante >=qtd_dado_defensor) {
+        territorios[IdAtacante].tropas ++;
+        territorios[IdDefensor].tropas --;
+        strcpy(tropa_vencedora, territorios[IdAtacante].nome);        
+
+
+        // valida se a missão foi finalizada
+        if(territorios[IdDefensor].tropas ==0) {
+            if(IdAtacante == id_territorio_missao){
+                // missão foi finalizada com exito 
+                statusMissao = 1;     
+            }else if(IdDefensor == id_territorio_missao) {
+                // missão foi finalizada com falha 
+                statusMissao = 2;     
+            }     
+                      
+            idVencedor = IdAtacante;
+            idPerdedor = IdDefensor;              
+        }           
+
+    } else {
+        
+        territorios[IdAtacante].tropas --;
+        territorios[IdDefensor].tropas ++;
+        strcpy(tropa_vencedora, territorios[IdDefensor].nome);
+
+        // valida se a missão foi finalizada com falha
+        // NESSA CONDIÇÃO, INVERTO AS POSSBILIDADES, CONSIDERANDO QUE O ATACANTE PERDEU TODAS AS TROPAS
+        if(territorios[IdAtacante].tropas ==0) {
+            if(IdAtacante == id_territorio_missao){
+                // missão foi finalizada com falha 
+                statusMissao = 2;     
+            }else if(IdDefensor == id_territorio_missao) {
+                // missão foi finalizada com exito 
+                statusMissao = 1;     
+            }     
+                      
+            idVencedor = IdDefensor;
+            idPerdedor = IdAtacante;      
+                    
+        } 
+
+
+    }
+
+
+    // SE statusMissao = 1, SUCESSO
+    // SE statusMissao = 2, FALHOU
+
+
+    // altera informação do territorio dominado
+    if(statusMissao ==1 || statusMissao == 2) {
+        strcat(territorios[idPerdedor].nome, " - dominado pelo Território - ");
+        strcat(territorios[idPerdedor].nome,territorios[idVencedor].nome);             
+    }
+    
+    // altera informação da missão
+    if(statusMissao ==1) {
+        strcat(nome_missao, " | Missão Finalizada (Sucesso)");   
+        exibeMissaoAtual(2);     
+    } else if(statusMissao == 2){
+        strcat(nome_missao, " | Missão Finalizada (Falhou)");    
+        exibeMissaoAtual(2);    
+    }
+
+
+
+ 
+    strcpy(mensagem_ataque, "\nTropa "); 
+    strcat(mensagem_ataque, tropa_vencedora);
+    strcat(mensagem_ataque, " Venceu essa rodada\n"); 
+    printf("%s\n", mensagem_ataque);
+
+
+    // printf("dado defensor -  %d: \n", qtd_dado_defensor);
+
+
+    
+}
 
 void faseDeAtaque() {
-   int IdTerritorioAtacante,IdTerritorioDefensor;
+   int IdAtacante,IdDefensor;
    
-   printf("----------------------- FASE DE ATAQUE ---------------------- \n");
-   printf("Escolha o territorio atacante (1 a %d)\n", qtdTerritorios);
-   scanf("%d", &IdTerritorioAtacante);
+   printf("----------------------- FASE DE ATAQUE ---------------------- \n\n");
+   printf("Escolha o territorio atacante (1 a %d): ", qtdTerritorios);
+   scanf("%d", &IdAtacante);
+   printf("Escolha o territorio defensor (1 a %d): ", qtdTerritorios);
+   scanf("%d", &IdDefensor);
+   
+    // verifica se o atacante selecionado é o mesmo que o defesenor, caso sim, realiza chamada recursiva    
+    if(IdAtacante == IdDefensor) {
+        printf("\n O Defensor, tem que ser uma opção diferente do atacante \n\n");
+        faseDeAtaque();
+    } else {
 
-   printf("opção selecionada -  %d)", IdTerritorioAtacante);
+        // passa os id's do atacante e defensor, via parametro
+        simularAtaque(IdAtacante,IdDefensor);
+    }
    
 }
-
-
-void simularAtaque(){
-
-
-}
-
 
 void exibirMenuPrincipal() {
-
- int ret;
+    
+    int ret;
     int opcao;	
 do {
     
@@ -177,7 +304,8 @@ do {
     printf("0 - Sair\n");
     printf("Selecione uma Opção: ");
     scanf("%d", &opcao);
-
+    printf("\n");
+    
         if (opcao != 0 && opcao != 1 && opcao != 2 && opcao != 3) {
             // entrada inválida: descarta a linha e repete
             printf("Entrada inválida. Digite uma das 4 opções acima.\n\n");
@@ -194,7 +322,7 @@ do {
                 faseDeAtaque();
                 break;
             case 2:
-                exibeMissaoAtual();
+                exibeMissaoAtual(1);
                 break;
             case 3:
                 exibirMapa();
@@ -206,43 +334,12 @@ do {
 }
 
 
-// Inclusão das bibliotecas padrão necessárias para entrada/saída, alocação de memória, manipulação de strings e tempo.
-
-// --- Constantes Globais ---
-// Definem valores fixos para o número de territórios, missões e tamanho máximo de strings, facilitando a manutenção.
-
-
-
-// --- Protótipos das Funções ---
-// Declarações antecipadas de todas as funções que serão usadas no programa, organizadas por categoria.
-// Funções de setup e gerenciamento de memória:
-// Funções de interface com o usuário:
-// Funções de lógica principal do jogo:
-// Função utilitária:
-
-// --- Função Principal (main) ---
-// Função principal que orquestra o fluxo do jogo, chamando as outras funções em ordem.
 int main() {
 
-    // - Define a cor do jogador e sorteia sua missão secreta.
-
-    // 2. Laço Principal do Jogo (Game Loop):
-    // - Roda em um loop 'do-while' que continua até o jogador sair (opção 0) ou vencer.
-    // - A cada iteração, exibe o mapa, a missão e o menu de ações.
-    // - Lê a escolha do jogador e usa um 'switch' para chamar a função apropriada:
-    //   - Opção 1: Inicia a fase de ataque.
-    //   - Opção 2: Verifica se a condição de vitória foi alcançada e informa o jogador.
-    //   - Opção 0: Encerra o jogo.
-    // - Pausa a execução para que o jogador possa ler os resultados antes da próxima rodada.
-
-    // 3. Limpeza:
-    // - Ao final do jogo, libera a memória alocada para o mapa para evitar vazamentos de memória.
-
-
+   
     int opcaoSelecionada;    
     srand(time(NULL));  // semente do gerador aleatorio
     setlocale(LC_ALL,"portuguese");
- 
  
     // alocar mapa dinamicamente
     void(*ptr_alocaMapa)() = alocarMapa;
@@ -263,8 +360,8 @@ int main() {
     
 
     // exibir missão atual
-    void(*ptr_exibeMissaoAtual)() = exibeMissaoAtual;
-    ptr_exibeMissaoAtual(); 
+    void(*ptr_exibeMissaoAtual)(int) = exibeMissaoAtual;
+    ptr_exibeMissaoAtual(1); 
     
 
     // exibe menu
@@ -277,22 +374,3 @@ int main() {
 
 }
 
-// --- Implementação das Funções ---
-
-
-
-// 
-// Gerencia a interface para a ação de ataque, solicitando ao jogador os territórios de origem e destino.
-// Chama a função simularAtaque() para executar a lógica da batalha.
-
-// 
-// Executa a lógica de uma batalha entre dois territórios.
-// Realiza validações, rola os dados, compara os resultados e atualiza o número de tropas.
-// Se um território for conquistado, atualiza seu dono e move uma tropa.
-
-
-
-// verificarVitoria():
-// Verifica se o jogador cumpriu os requisitos de sua missão atual.
-// Implementa a lógica para cada tipo de missão (destruir um exército ou conquistar um número de territórios).
-// Retorna 1 (verdadeiro) se a missão foi cumprida, e 0 (falso) caso contrário.
