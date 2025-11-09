@@ -1,6 +1,6 @@
 // ============================================================================
 //         PROJETO WAR ESTRUTURADO - DESAFIO DE CÓDIGO
-//         UPDATE - 1.1.2
+//         UPDATE - 1.1.3
 // ============================================================================
 //        
 // ============================================================================
@@ -168,8 +168,8 @@ void simularAtaque(int IdAtacante,int IdDefensor){
     int min,max,dado;
     int idVencedor,idPerdedor;
     int qtd_dado_atcante, qtd_dado_defensor;
-    char mensagem_ataque[50];
-    char tropa_vencedora[30];
+    char mensagem_ataque[100];
+    char tropa_vencedora[100];
     
     //   printf("id atacante -  %d: ", IdAtacante);
     //   printf("id defensor -  %d: ", IdDefensor);    
@@ -255,8 +255,8 @@ void simularAtaque(int IdAtacante,int IdDefensor){
 
 
 
- 
-    strcpy(mensagem_ataque, "\nTropa "); 
+    // exibe mensagem com teitorio vencedor
+    strcpy(mensagem_ataque, "\nTerritório "); 
     strcat(mensagem_ataque, tropa_vencedora);
     strcat(mensagem_ataque, " Venceu essa rodada\n"); 
     printf("%s\n", mensagem_ataque);
